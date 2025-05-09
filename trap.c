@@ -51,6 +51,8 @@ trap(struct trapframe *tf)
     if(cpuid() == 0){
       acquire(&tickslock);
       ticks++;
+     // if ((ticks % 1000) == 0)
+     //   cprintf("t=%d\n", ticks);
       wakeup(&ticks);
       release(&tickslock);
     }
