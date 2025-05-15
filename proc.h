@@ -1,4 +1,8 @@
 // Per-CPU state
+#ifndef __PROC__
+#define __PROC__
+
+#include "defs.h"
 struct cpu {
   uchar apicid;                // Local APIC ID
   struct context *scheduler;   // swtch() here to enter scheduler
@@ -34,12 +38,6 @@ struct context {
 
 enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
-enum queue_tag {
-  QUEUE_TAG_LEVEL_2_CLASS_2,
-  QUEUE_TAG_LEVEL_2_CLASS_1,
-  QUEUE_TAG_CLASS_1
-};
-
 // Per-process state
 struct proc {
   uint sz;                     // Size of process memory (bytes)
@@ -60,6 +58,7 @@ struct proc {
   int tick_used;
   int init_time;
   int deadline;
+  int waiting;
 };
 
 // Process memory is laid out contiguously, low addresses first:
@@ -67,3 +66,7 @@ struct proc {
 //   original data and bss
 //   fixed-size stack
 //   expandable heap
+
+void inc_waiting_procs();
+
+#endif

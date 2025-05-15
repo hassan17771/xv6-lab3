@@ -1,3 +1,6 @@
+#ifndef __DEFS__
+#define __DEFS__
+
 #define INT_MAX 2147483647
 
 struct buf;
@@ -11,6 +14,12 @@ struct spinlock;
 struct sleeplock;
 struct stat;
 struct superblock;
+
+enum queue_tag {
+  QUEUE_TAG_LEVEL_2_CLASS_2,
+  QUEUE_TAG_LEVEL_2_CLASS_1,
+  QUEUE_TAG_CLASS_1
+};
 
 // bio.c
 void            binit(void);
@@ -123,6 +132,7 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
+int             change_queue(int, int);
 
 // swtch.S
 void            swtch(struct context**, struct context*);
@@ -191,3 +201,5 @@ void            clearpteu(pde_t *pgdir, char *uva);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
+
+#endif

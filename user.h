@@ -24,6 +24,7 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+int change_queue(int, int);
 
 // ulib.c
 int stat(const char*, struct stat*);

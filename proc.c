@@ -652,3 +652,39 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+int change_queue(int pid, int queue) {
+  if (queue > QUEUE_TAG_LEVEL_2_CLASS_1) {
+    return -1;
+  }
+
+  acquire(&ptable.lock);
+  if (ptable.proc[pid].qtag == queue) {
+    release(&ptable.lock);
+    return -1;
+  }
+
+  cprintf("proc %d moved to the queue: %d\n", pid, queue);
+  ptable.proc[pid].qtag = queue;
+  ptable.proc[pid].init_time = 0;
+  release(&ptable.lock);
+  return 1;
+}
+
+void inc_waiting_procs(struct proc* cur) {
+  struct proc* p;
+  acquire(&ptable.lock);
+  for(p=ptable.proc ; p < &ptable.proc[NPROC]; p++){
+      if(p->state != RUNNABLE) continue;
+      if(cur) {
+        if (cur == p) continue;
+      }
+      p->waiting++;
+      if (p->waiting == 800) {
+        release(&ptable.lock);
+        change_queue(p->pid, QUEUE_TAG_LEVEL_2_CLASS_1);
+        acquire(&ptable.lock);
+      }
+  }
+  release(&ptable.lock);
+}
