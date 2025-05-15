@@ -133,6 +133,7 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 int             change_queue(int, int);
+int             print_procinfo(void);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

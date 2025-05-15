@@ -93,6 +93,11 @@ exec(char *path, char **argv)
       last = s+1;
   safestrcpy(curproc->name, last, sizeof(curproc->name));
 
+  if ((strncmp(last, "sh", 3) != 0) && (strncmp(last, "init", 5) != 0)) {
+    if (curproc->qtag != QUEUE_TAG_CLASS_1)
+      curproc->qtag = QUEUE_TAG_LEVEL_2_CLASS_2;
+  }
+
   // Commit to the user image.
   oldpgdir = curproc->pgdir;
   curproc->pgdir = pgdir;

@@ -11,6 +11,9 @@ int main(void)
         for (int j = 0; j < 10; j++) {
         asm volatile(""); // prevent compiler from optimizing it away
         }
+        if (i == 100000) {
+            print_procinfo();
+        }
     }
     printf(1, "Process %d finished work\n", getpid());
     exit();

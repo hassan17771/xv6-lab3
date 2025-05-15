@@ -47,12 +47,12 @@ void phase_two()
 {
     printf(1, "\n--- Phase 2: EDF with 1 RT parent and 4 RT children (delayed) ---\n");
 
-    int parent_pid = fork_rt(200);
+    int parent_pid = fork_rt(50);
     if (parent_pid == 0)
     {
         printf(1, "RT parent %d started\n", getpid());
 
-        int deadlines[] = {180, 160, 140, 120};
+        int deadlines[] = {60, 40, 70, 80};
         for (int i = 0; i < 4; i++)
         {
             short_delay(1); // Small delay between child creation
@@ -108,9 +108,9 @@ void phase_three()
 
 int main(void)
 {
-    // phase_one();
-    // phase_two();
-    phase_three();
+    phase_one();
+    phase_two();
+   // phase_three();
 
     printf(1, "\nAll phases complete.\n");
     exit();

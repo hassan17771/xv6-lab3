@@ -67,6 +67,6 @@ struct proc {
 //   fixed-size stack
 //   expandable heap
 
-void inc_waiting_procs();
+void inc_waiting_procs(struct proc* cur);
 
 #endif

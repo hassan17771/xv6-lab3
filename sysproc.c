@@ -98,6 +98,11 @@ sys_change_queue(void) {
   return change_queue(pid, queue);
 }
 
+int
+sys_print_procinfo(void) {
+  return print_procinfo();
+}
+
 // return how many clock tick interrupts have occurred
 // since start.
 int

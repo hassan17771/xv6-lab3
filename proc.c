@@ -269,7 +269,9 @@ fork_rt(int deadline)
 
   pid = np->pid;
 
-  np->deadline = deadline;
+  acquire(&tickslock);
+  np->deadline = deadline + ticks;
+  release(&tickslock);
   np->qtag = QUEUE_TAG_CLASS_1;
   
   acquire(&tickslock);
@@ -687,4 +689,66 @@ void inc_waiting_procs(struct proc* cur) {
       }
   }
   release(&ptable.lock);
+}
+
+char* get_state_name(enum procstate state) {
+  switch (state) {
+    case UNUSED: return "UNUSED";
+    case EMBRYO: return "EMBRYO";
+    case SLEEPING: return "SLEEPING";
+    case RUNNABLE: return "RUNNABLE";
+    case RUNNING: return "RUNNING";
+    case ZOMBIE: return "ZOMBIE";
+    default: return "UNKNOWN";
+  }
+}
+
+char* get_class_name(enum queue_tag tag) {
+  switch (tag) {
+    case QUEUE_TAG_CLASS_1: return "real time";
+    case QUEUE_TAG_LEVEL_2_CLASS_1:
+    case QUEUE_TAG_LEVEL_2_CLASS_2: return "normal";
+    default: return "unknown";
+  }
+}
+
+char* get_algorithm_name(enum queue_tag tag) {
+  switch (tag) {
+    case QUEUE_TAG_CLASS_1: return "EDF";
+    case QUEUE_TAG_LEVEL_2_CLASS_1: return "mlfq(RR)";
+    case QUEUE_TAG_LEVEL_2_CLASS_2: return "mlfq(FCFS)";
+    default: return "unknown";
+  }
+}
+
+int
+print_procinfo(void) {
+  struct proc *p;
+  acquire(&tickslock);
+  cprintf("###### ticks = %d ######\n", ticks);
+  release(&tickslock);
+  
+  acquire(&ptable.lock);
+
+  cprintf("| name | pid | state | class | algorithm | wait time | deadline | consecutive run | arrival |\n");
+  cprintf("|------|-----|--------|--------|------------|------------|-----------|------------------|---------|\n");
+
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    if(p->state == UNUSED)
+      continue;
+    cprintf("| %s | %d | %s | %s | %s | %d | %d | %s | %d |\n",
+      p->name,
+      p->pid,
+      get_state_name(p->state),
+      get_class_name(p->qtag),
+      get_algorithm_name(p->qtag),
+      p->waiting,
+      p->deadline,
+      "N/A", // You can later add p->consec_time field here
+      p->init_time
+    );
+  }
+
+  release(&ptable.lock);
+  return 0;
 }

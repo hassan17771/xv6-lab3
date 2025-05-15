@@ -25,6 +25,7 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int change_queue(int, int);
+int print_procinfo(void);
 
 // ulib.c
 int stat(const char*, struct stat*);

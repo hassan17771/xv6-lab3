@@ -61,7 +61,7 @@ trap(struct trapframe *tf)
       wakeup(&ticks);
       release(&tickslock);
     }
-    if (myproc()) cprintf("proc %d is runnig\n", myproc()->pid);
+    // if (myproc()) cprintf("proc %d is runnig\n", myproc()->pid);
     if (myproc()) myproc()->tick_used++;
     inc_waiting_procs(myproc());
     lapiceoi();

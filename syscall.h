@@ -22,3 +22,4 @@
 #define SYS_close  21
 #define SYS_fork_rt 22
 #define SYS_change_queue 23
+#define SYS_print_procinfo 24
