@@ -13,6 +13,7 @@ struct {
 } ptable;
 
 static struct proc *initproc;
+static struct proc dummy;
 
 int nextpid = 1;
 extern void forkret(void);
@@ -141,6 +142,7 @@ userinit(void)
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
+  p->qtag = QUEUE_TAG_LEVEL_2_CLASS_1;
 
   // this assignment to p->state lets other cores
   // run this process. the acquire forces the above
@@ -211,6 +213,10 @@ fork(void)
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 
   pid = np->pid;
+
+  if ((strncmp(curproc->name, "sh", 3) == 0) || (strncmp(curproc->name, "init", 5) == 0)) {
+    np->qtag = QUEUE_TAG_LEVEL_2_CLASS_1;
+  }
 
   acquire(&ptable.lock);
 
@@ -311,6 +317,39 @@ wait(void)
   }
 }
 
+struct proc* run_class_2_level_1(struct proc* p) {
+  int max_ticks = INT_MAX;
+  struct proc* found = &dummy;
+
+  for(; p < &ptable.proc[NPROC]; p++){
+      if(p->state != RUNNABLE)
+        continue;
+      if (p->qtag == QUEUE_TAG_LEVEL_2_CLASS_1) {
+        if (p->tick_used < max_ticks) {
+          max_ticks = p->tick_used;
+          found = p;
+        }
+      }
+  }
+  return found;
+}
+
+struct proc* run_class_2_level_2(struct proc* p) {
+  int max_init_time = INT_MAX;
+  struct proc* found = &dummy;
+
+  for(; p < &ptable.proc[NPROC]; p++){
+      if(p->state != RUNNABLE)
+        continue;
+      if (p->qtag == QUEUE_TAG_LEVEL_2_CLASS_2) {
+        if (p->init_time < max_init_time) {
+          max_init_time = p->init_time;
+          found = p;
+        }
+      }
+  }
+  return found;
+}
 //PAGEBREAK: 42
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
@@ -332,10 +371,12 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
+    p = run_class_2_level_1(ptable.proc);
+    if (p->state == UNUSED) {
+      p = run_class_2_level_2(ptable.proc);
+    }
 
+    if (p->state == RUNNABLE) {
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.

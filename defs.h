@@ -1,3 +1,5 @@
+#define INT_MAX 2147483647
+
 struct buf;
 struct context;
 struct file;

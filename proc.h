@@ -34,6 +34,12 @@ struct context {
 
 enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
+enum queue_tag {
+  QUEUE_TAG_LEVEL_2_CLASS_2,
+  QUEUE_TAG_LEVEL_2_CLASS_1,
+  QUEUE_TAG_CLASS_1
+};
+
 // Per-process state
 struct proc {
   uint sz;                     // Size of process memory (bytes)
@@ -49,6 +55,10 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+  struct user* user;
+  enum queue_tag qtag;
+  int tick_used;
+  int init_time;
 };
 
 // Process memory is laid out contiguously, low addresses first:

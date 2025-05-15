@@ -218,15 +218,15 @@ QEMUGDB = $(shell if $(QEMU) -help | grep -q '^-gdb'; \
 	then echo "-gdb tcp::$(GDBPORT)"; \
 	else echo "-s -p $(GDBPORT)"; fi)
 ifndef CPUS
-CPUS := 2
+CPUS := 1
 endif
-QEMUOPTS = -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp cpus=2,cores=1,threads=1,sockets=2,dies=1 -m 512 $(QEMUEXTRA)
+QEMUOPTS = -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp cpus=$(CPUS),cores=1,threads=1,sockets=$(CPUS),dies=1 -m 512 $(QEMUEXTRA)
 
 qemu: fs.img xv6.img
 	$(QEMU) -serial mon:stdio $(QEMUOPTS)
 
 qemu-memfs: xv6memfs.img
-	$(QEMU) -drive file=xv6memfs.img,index=0,media=disk,format=raw -smp cpus=2,cores=1,threads=2,sockets=2,dies=1 -m 256
+	$(QEMU) -drive file=xv6memfs.img,index=0,media=disk,format=raw -smp cpus=$(CPUS),cores=1,threads=1,sockets=$(CPUS),dies=1 -m 256
 
 qemu-nox: fs.img xv6.img
 	$(QEMU) -nographic $(QEMUOPTS)

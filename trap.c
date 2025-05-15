@@ -62,6 +62,7 @@ trap(struct trapframe *tf)
       release(&tickslock);
     }
     if (myproc()) cprintf("proc %d is runnig\n", myproc()->pid);
+    if (myproc()) myproc()->tick_used++;
     lapiceoi();
     break;
   case T_IRQ0 + IRQ_IDE:
