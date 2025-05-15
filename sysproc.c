@@ -14,6 +14,17 @@ sys_fork(void)
 }
 
 int
+sys_fork_rt(void)
+{
+  int deadline;
+  
+  if(argint(0, &deadline) < 0)
+    return -1;
+    
+  return fork_rt(deadline);
+}
+
+int
 sys_exit(void)
 {
   exit();

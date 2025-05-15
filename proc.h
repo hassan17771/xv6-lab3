@@ -59,6 +59,7 @@ struct proc {
   enum queue_tag qtag;
   int tick_used;
   int init_time;
+  int deadline;
 };
 
 // Process memory is laid out contiguously, low addresses first:

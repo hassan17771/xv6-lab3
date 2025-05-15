@@ -21,6 +21,9 @@ extern void trapret(void);
 
 static void wakeup1(void *chan);
 
+extern uint ticks;
+extern struct spinlock tickslock;
+
 void
 pinit(void)
 {
@@ -217,6 +220,61 @@ fork(void)
   if ((strncmp(curproc->name, "sh", 3) == 0) || (strncmp(curproc->name, "init", 5) == 0)) {
     np->qtag = QUEUE_TAG_LEVEL_2_CLASS_1;
   }
+  
+  acquire(&tickslock);
+  np->init_time = ticks;
+  release(&tickslock);
+
+  acquire(&ptable.lock);
+
+  np->state = RUNNABLE;
+
+  release(&ptable.lock);
+
+  return pid;
+}
+
+int
+fork_rt(int deadline)
+{
+  int i, pid;
+  struct proc *np;
+  struct proc *curproc = myproc();
+
+  // Allocate process.
+  if((np = allocproc()) == 0){
+    return -1;
+  }
+
+  // Copy process state from proc.
+  if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
+    kfree(np->kstack);
+    np->kstack = 0;
+    np->state = UNUSED;
+    return -1;
+  }
+  np->sz = curproc->sz;
+  np->parent = curproc;
+  *np->tf = *curproc->tf;
+
+  // Clear %eax so that fork returns 0 in the child.
+  np->tf->eax = 0;
+
+  for(i = 0; i < NOFILE; i++)
+    if(curproc->ofile[i])
+      np->ofile[i] = filedup(curproc->ofile[i]);
+  np->cwd = idup(curproc->cwd);
+
+  safestrcpy(np->name, curproc->name, sizeof(curproc->name));
+
+  pid = np->pid;
+
+  np->deadline = deadline;
+  np->qtag = QUEUE_TAG_CLASS_1;
+  
+  acquire(&tickslock);
+  np->init_time = ticks;
+  release(&tickslock);
 
   acquire(&ptable.lock);
 
@@ -350,6 +408,24 @@ struct proc* run_class_2_level_2(struct proc* p) {
   }
   return found;
 }
+
+struct proc* run_class_1(struct proc* p) {
+  int max_deedline = INT_MAX;
+  struct proc* found = &dummy;
+
+  for(; p < &ptable.proc[NPROC]; p++){
+      if(p->state != RUNNABLE)
+        continue;
+      if (p->qtag == QUEUE_TAG_CLASS_1) {
+        if (p->deadline < max_deedline) {
+          max_deedline = p->deadline;
+          found = p;
+        }
+      }
+  }
+  return found;
+}
+
 //PAGEBREAK: 42
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
@@ -371,9 +447,12 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    p = run_class_2_level_1(ptable.proc);
+    p = run_class_1(ptable.proc);
     if (p->state == UNUSED) {
-      p = run_class_2_level_2(ptable.proc);
+      p = run_class_2_level_1(ptable.proc);
+      if (p->state == UNUSED) {
+        p = run_class_2_level_2(ptable.proc);
+      }
     }
 
     if (p->state == RUNNABLE) {
